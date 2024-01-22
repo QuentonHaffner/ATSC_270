@@ -3,7 +3,7 @@
 This is a repository for the University of North Dakota Computer Concepts in Meteorology course (ATSC 270) for Spring 2024.  This repository includes directories holding all the required/necessary files for the course assignments.  Also in each directory are basic files indicing what/how things should be documented.
 
 ---
-Copyright (C) 2022 Jared W. Marquis
+Copyright (C) 2024 Jared W. Marquis, Quenton Haffner
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
