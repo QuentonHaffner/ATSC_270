@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-def upperairproj(filename,density=75*units('km')),cxi=-120,cyi=-75,cxf=23,cyf=50):
+def upperairproj(filename='20211211_0500',density=75*units('km'),cxi=-120,cyi=-75,cxf=23,cyf=50):
         #second block
-    nc = Dataset('20211211_0500')
+    nc = Dataset(filename)
     #third block
     #read in variables needed for plotting surface station plots
     station_name = nc.variables['stationName'][:]
@@ -34,7 +34,37 @@ def upperairproj(filename,density=75*units('km')),cxi=-120,cyi=-75,cxf=23,cyf=50
     skycover = nc.variables['skyCover'][:]
     
     #fourth block
-    #get u and v wind components
+    #convert station names from masked byte array to list of strings
+    stn_names = ['']*len(station_name)
+    for index in range(len(station_name)):
+        stn = station_name[index].tobytes().decode().rstrip('\x00')
+        stn_names[index] = stn
+    
+    #convert present weather from masked byte array to list of strings
+    cur_wx = ['']*len(weather)
+    for index in range(len(weather)):
+        wx = weather[index].tobytes().decode().rstrip('\x00')
+        cur_wx[index] = wx
+    
+    #converting the current weather string to numerical value for metpy plotting
+    wx_codes = wx_code_to_numeric(cur_wx)
+    
+    sky_cover_num = np.empty(len(skycover),dtype=int)
+    for i in range(len(skycover)):
+        this_skycvr = skycover[i].tobytes().decode().rstrip('\x00')
+        if this_skycvr[-3:] == 'SKC' or this_skycvr[-3:] == 'CLR':
+            sky_cover_num[i] = 0
+        elif this_skycvr[-3:] == 'FEW':
+            sky_cover_num[i] = 2
+        elif this_skycvr[-3:] == 'SCT':
+            sky_cover_num[i] = 4
+        elif this_skycvr[-3:] == 'BKN':
+            sky_cover_num[i] = 6
+        elif this_skycvr[-3:] == 'OVC':
+            sky_cover_num[i] = 8
+        else:
+            sky_cover_num[i] = 10
+        #get u and v wind components
     wspd_from_nc = np.array(wspd)*units('m/s')
     wdir_from_nc = np.array(wdir)*units('degrees')
     u,v = mpcalc.wind_components(wspd_from_nc,wdir_from_nc)
@@ -62,6 +92,8 @@ def upperairproj(filename,density=75*units('km')),cxi=-120,cyi=-75,cxf=23,cyf=50
     data = pd.DataFrame(data_for_df,index=stn_names)
     
     #six block
+    proj = ccrs.LambertConformal(central_longitude=-100,central_latitude=35)
+    locs = proj.transform_points(ccrs.PlateCarree(),data['longitude'].values,data['latitude'].values)
     data_thinned = data[mpcalc.reduce_point_density(locs,75*units('km'))]
     
     #seven block
