@@ -11,11 +11,11 @@ from metpy.io import metar
 import pandas as pd
 
 import matplotlib.pyplot as plt
-
+from metpy.interpolate import interpolate_to_grid, remove_nan_observations
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-
-def upperairproj(filename='20211211_0500',density=75*units('km'),cxi=-120,cyi=-75,cxf=23,cyf=50):
+#-120, -75, 23, 50
+def upperairproj(filename='20211211_0500',density=400000,cxi=-120,cyi=-75,cxf=23,cyf=50):
         #second block
     nc = Dataset(filename)
     #third block
@@ -30,6 +30,7 @@ def upperairproj(filename='20211211_0500',density=75*units('km'),cxi=-120,cyi=-7
     gust = nc.variables['windGust'][:]
     weather = nc.variables['presWeather'][:]
     visibility = nc.variables['visibility'][:]
+
     pslp = nc.variables['seaLevelPress'][:]/100 #pascal to hPa
     skycover = nc.variables['skyCover'][:]
     
@@ -94,7 +95,7 @@ def upperairproj(filename='20211211_0500',density=75*units('km'),cxi=-120,cyi=-7
     #six block
     proj = ccrs.LambertConformal(central_longitude=-100,central_latitude=35)
     locs = proj.transform_points(ccrs.PlateCarree(),data['longitude'].values,data['latitude'].values)
-    data_thinned = data[mpcalc.reduce_point_density(locs,75*units('km'))]
+    data_thinned = data[mpcalc.reduce_point_density(locs,density)]
     
     #seven block
     #create wind gust vectors
@@ -119,9 +120,9 @@ def upperairproj(filename='20211211_0500',density=75*units('km'),cxi=-120,cyi=-7
     ax.add_feature(cfeature.STATES)
     ax.add_feature(cfeature.BORDERS)
     
-    #zoom on the Northern Plains
-    ax.set_extent((-105, -90, 40, 50))
-    
+    #zoom on
+    ax.set_extent((cxi,cyi,cxf,cyf))
+    #(-105, -90, 40, 50)
     
     #create stationplot (will actually need to create 2 to handle wind gusts)
     stationplots = StationPlot(ax,data_thinned['longitude'],data_thinned['latitude'],transform=ccrs.PlateCarree(),clip_on=True,fontsize=10)
@@ -140,6 +141,7 @@ def upperairproj(filename='20211211_0500',density=75*units('km'),cxi=-120,cyi=-7
     #station ID in dark blue
     stationplots.plot_text((1.5,-1), data_thinned['station_id'].values, color='darkblue')
     
+
     #visibility in black (need to convert from meters to miles)
     stationplots.plot_parameter((-2,0),data_thinned['visibility'].values*units('meters').to(units('miles')),color='black')
     
@@ -154,5 +156,3 @@ def upperairproj(filename='20211211_0500',density=75*units('km'),cxi=-120,cyi=-7
     
     #current weather
     stationplots.plot_symbol((-1,0), data_thinned['current_wx1_symbol'].values, current_weather)
-    
-    #save the map as surface_obs.png
