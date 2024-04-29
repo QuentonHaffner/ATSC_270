@@ -15,7 +15,7 @@ from metpy.interpolate import interpolate_to_grid, remove_nan_observations
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 #-120, -75, 23, 50
-def upperairproj(filename='20211211_0500',density=400000,cxi=-120,cyi=-75,cxf=23,cyf=50):
+def upperairproj(filename='20211211_0500',density=400000,cxi=-120,cyi=-75,cxf=23,cyf=50,save=None):
         #second block
     nc = Dataset(filename)
     #third block
@@ -156,3 +156,8 @@ def upperairproj(filename='20211211_0500',density=400000,cxi=-120,cyi=-75,cxf=23
     
     #current weather
     stationplots.plot_symbol((-1,0), data_thinned['current_wx1_symbol'].values, current_weather)
+
+    if save != None:
+        
+        plt.savefig(save)
+        plt.title(f'{save}\nSurface Plot')

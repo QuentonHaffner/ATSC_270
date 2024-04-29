@@ -186,5 +186,6 @@ def projsat(date,thehour):
     plt.title('%s Channel %s\n'%(string,channel) + r'%s'%(img_time.strftime('%Y-%m-%d %H:%M')))
     time_str = img_time.strftime('%Y%m%d_%H%M')
     plt.savefig(f'GOES_CH{channel}_{time_str}.png')
+    return f'GOES_CH{channel}_{time_str}.png'
 
 
